@@ -1,12 +1,17 @@
-###############################################
-# RabbitMQ in Action
-# Chapter 1 - Hello World Consumer
-# 
-# Requires: pika >= 0.9.5
-# 
-# Author: Jason J. W. Williams
-# (C)2011
-###############################################
+# -*- coding: utf-8 -*-
+
+# Hello World Producer
+# 发布者代码需要完成如下任务
+# 1. 连接到RabbitMQ
+# 2. 获取信道
+# 3. 声明交换器
+# 4. 声明队列
+# 5. 把队列和交换器绑定起来
+# 6. 消费消息
+# 7. 关闭信道
+# 8. 关闭连接
+# Requires: pika >= 0.10.0
+# Author: knitmesh
 
 import pika
 
@@ -14,45 +19,46 @@ credentials = pika.PlainCredentials("guest", "guest")
 conn_params = pika.ConnectionParameters("localhost",
                                         credentials=credentials)
 
-# /(hwc.1) Establish connection to broker
+# 1. 建立倒代理服务器的连接
 conn_broker = pika.BlockingConnection(conn_params)
 
-# /(hwc.2) Obtain channel
+# 2. 获取信道
 channel = conn_broker.channel()
 
-# /(hwc.3) Declare the exchange
+# 3. 声明交换器, exchange_declare方法语义为如果没有就创建, 否则继续
 channel.exchange_declare(exchange="hello-exchange",
                          type="direct",
                          passive=False,
                          durable=True,
                          auto_delete=False)
 
-# /(hwc.4) Declare the queue
+# 4. 声明队列
 channel.queue_declare(queue="hello-queue")
 
-# /(hwc.5) Bind the queue and exchange together on the key "hola"
+# 5. 通过键"hola"将队列和交换器绑定起来
 channel.queue_bind(queue="hello-queue",
                    exchange="hello-exchange",
                    routing_key="hola")
 
 
-# /(hwc.6) Make function to process incoming messages
+# 6. 处理消息的回调函数函数
 def msg_consumer(channel, method, header, body):
-    # /(hwc.7) Message acknowledgement
+    # 7. 确认消息
     channel.basic_ack(delivery_tag=method.delivery_tag)
 
     if body == "quit":
-        # /(hwc.8) Stop consuming more messages and quit
+        # 8. 停止消费并退出,
         channel.basic_cancel(consumer_tag="hello-consumer")
+        # 9. 关闭信道和连接
         channel.stop_consuming()
     else:
         print body
 
     return
 
-# /(hwc.9) Subscribe our consumer
+# 10. 消费者订阅队列
 channel.basic_consume(msg_consumer,
                       queue="hello-queue",
                       consumer_tag="hello-consumer")
-# /(hwc.10) Start consuming
+# 11. 开始消费
 channel.start_consuming()
