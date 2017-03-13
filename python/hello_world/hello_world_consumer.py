@@ -25,7 +25,7 @@ conn_broker = pika.BlockingConnection(conn_params)
 # 2. 获取信道
 channel = conn_broker.channel()
 
-# 3. 声明交换器, exchange_declare方法语义为如果没有就创建, 否则继续
+# 3. 声明交换器, exchange_declare方法语义为如果不存在该交换器就创建
 channel.exchange_declare(exchange="hello-exchange",
                          type="direct",
                          passive=False,

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################
 # RabbitMQ in Action
 # Chapter 1 - Hello World Producer
@@ -9,7 +10,8 @@
 # (C)2011
 ###############################################
 
-import pika, sys
+import pika
+import sys
 from pika import spec
 
 credentials = pika.PlainCredentials("guest", "guest")
@@ -19,7 +21,9 @@ conn_broker = pika.BlockingConnection(conn_params)
 
 channel = conn_broker.channel()
 
-def confirm_handler(frame): #/(hwppc.1) Publisher confirm handler
+
+# 1. 发送方确认处理方法
+def confirm_handler(frame):
     if type(frame.method) == spec.Confirm.SelectOk:
         print "Channel in 'confirm' mode."
     elif type(frame.method) == spec.Basic.Nack:
@@ -30,21 +34,22 @@ def confirm_handler(frame): #/(hwppc.1) Publisher confirm handler
             print "Confirm received!"
             msg_ids.remove(frame.method.delivery_tag)
 
-#/(hwppc.2) Put channel in "confirm" mode
+# 2. 把信道设置为发送方确认模式
 channel.confirm_delivery(callback=confirm_handler)
 
 msg = sys.argv[1]
 msg_props = pika.BasicProperties()
 msg_props.content_type = "text/plain"
 
-msg_ids = [] #/(hwppc.3) Reset message ID tracker
+# 3. 定义ID追踪列表
+msg_ids = []
 
+# 4. 发布消息
 channel.basic_publish(body=msg,
                       exchange="hello-exchange",
                       properties=msg_props,
-                      routing_key="hola") #/(hwppc.4) Publish the message
+                      routing_key="hola")
 
-msg_ids.append(len(msg_ids) + 1) #/(hwppc.5) Add ID to tracking list
-
+# 5. 将ID添加至追踪列表
+msg_ids.append(len(msg_ids) + 1)
 channel.close()
-
